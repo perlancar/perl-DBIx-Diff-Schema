@@ -129,6 +129,7 @@ _
     args => {
         %common_args,
         table => {
+            schema => 'str*',
             name => 'str*',
             summary => 'Table name',
             req => 1,
