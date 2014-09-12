@@ -1,5 +1,12 @@
 Revision history for DBIx-Diff-Struct
 
+0.02    2014-09-12 (PERLANCAR)
+
+        - No functional changes.
+
+        - Rebuild with updated Dist::Zilla::Plugin::Rinci::Validate.
+
+
 0.01    2014-09-12 (PERLANCAR)
 
         - First release.
