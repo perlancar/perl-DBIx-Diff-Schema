@@ -20,6 +20,11 @@ our @EXPORT_OK = qw(
 
 our %SPEC;
 
+$SPEC{':package'} = {
+    v => 1.1,
+    summary => 'Compare structure of two DBI databases',
+};
+
 my %common_args = (
     dbh1 => {
         schema => ['obj*'],
@@ -254,7 +259,7 @@ sub diff_db_struct {
 }
 
 1;
-# ABSTRACT: Compare structure of two DBI databases
+# ABSTRACT:
 
 =head1 SYNOPSIS
 
