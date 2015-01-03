@@ -275,23 +275,6 @@ See function's documentation for sample result structure.
 Currently only tested on Postgres and SQLite.
 
 
-=head1 TODO
-
-=over
-
-=item * Support more extensive column diff-ing
-
-Beside just type name, nullable, and octet length/decimal digits.
-
-=item * Options to compare column ordinal position?
-
-=item * Support views
-
-=item * Compare indices
-
-=back
-
-
 =head1 SEE ALSO
 
 L<DBIx::Compare> to compare database contents.
