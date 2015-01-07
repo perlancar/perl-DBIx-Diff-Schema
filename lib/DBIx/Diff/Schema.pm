@@ -1,4 +1,4 @@
-package DBIx::Diff::Struct;
+package DBIx::Diff::Schema;
 
 # DATE
 # VERSION
@@ -14,15 +14,15 @@ use List::Util qw(first);
 use Exporter;
 our @ISA = qw(Exporter);
 our @EXPORT_OK = qw(
-                       diff_db_struct
-                       diff_table_struct
+                       diff_db_schema
+                       diff_table_schema
                );
 
 our %SPEC;
 
 $SPEC{':package'} = {
     v => 1.1,
-    summary => 'Compare structure of two DBI databases',
+    summary => 'Compare schema of two DBI databases',
 };
 
 my %common_args = (
@@ -80,7 +80,7 @@ sub _list_columns {
     sort @res;
 }
 
-sub _diff_column_struct {
+sub _diff_column_schema {
     my ($c1, $c2) = @_;
 
     my $res = {};
@@ -110,13 +110,13 @@ sub _diff_column_struct {
     $res;
 }
 
-$SPEC{diff_table_struct} = {
+$SPEC{diff_table_schema} = {
     v => 1.1,
-    summary => 'Compare structure of two DBI tables',
+    summary => 'Compare schema of two DBI tables',
     description => <<'_',
 
-This function compares structures of two DBI tables. You supply two `DBI`
-database handles along with table name and this function will return a hash:
+This function compares schemas of two DBI tables. You supply two `DBI` database
+handles along with table name and this function will return a hash:
 
     {
         deleted_columns => [...],
@@ -145,7 +145,7 @@ _
     result_naked => 1,
     "x.perinci.sub.wrapper.disable_validate_args" => 1,
 };
-sub diff_table_struct {
+sub diff_table_schema {
     my $dbh1    = shift; # VALIDATE_ARG
     my $dbh2    = shift; # VALIDATE_ARG
     my $table   = shift; # VALIDATE_ARG
@@ -163,7 +163,7 @@ sub diff_table_struct {
         my $c1n = $c1->{COLUMN_NAME};
         my $c2 = first {$c1n eq $_->{COLUMN_NAME}} @columns2;
         if (defined $c2) {
-            my $tres = _diff_column_struct($c1, $c2);
+            my $tres = _diff_column_schema($c1, $c2);
             $modified{$c1n} = $tres if keys %$tres;
         } else {
             push @deleted, $c1n;
@@ -185,12 +185,12 @@ sub diff_table_struct {
     $res;
 }
 
-$SPEC{diff_db_struct} = {
+$SPEC{diff_db_schema} = {
     v => 1.1,
-    summary => 'Compare structure of two DBI databases',
+    summary => 'Compare schemas of two DBI databases',
     description => <<'_',
 
-This function compares structures of two DBI databases. You supply two `DBI`
+This function compares schemas of two DBI databases. You supply two `DBI`
 database handles and this function will return a hash:
 
     {
@@ -224,7 +224,7 @@ _
     result_naked => 1,
     "x.perinci.sub.wrapper.disable_validate_args" => 1,
 };
-sub diff_db_struct {
+sub diff_db_schema {
     my $dbh1 = shift; # VALIDATE_ARG
     my $dbh2 = shift; # VALIDATE_ARG
 
@@ -238,7 +238,7 @@ sub diff_db_struct {
     for (@tables1) {
         if ($_ ~~ @tables2) {
             #$log->tracef("Comparing table %s ...", $_);
-            my $tres = diff_table_struct($dbh1, $dbh2, $_);
+            my $tres = diff_table_schema($dbh1, $dbh2, $_);
             $modified{$_} = $tres if keys %$tres;
         } else {
             push @deleted, $_;
@@ -263,11 +263,13 @@ sub diff_db_struct {
 
 =head1 SYNOPSIS
 
- use DBIx::Diff::Struct qw(diff_db_struct diff_table_struct);
+ use DBIx::Diff::Schema qw(diff_db_schema diff_table_schema);
 
- my $res = diff_db_struct($dbh1, 'dbname1', $dbh2, 'dbname2');
+ my $res  = diff_db_schema($dbh1, 'dbname1', $dbh2, 'dbname2');
 
-See function's documentation for sample result structure.
+To compare schemas of a single table:
+
+ my $res = diff_table_schema($dbh1, 'dbname1', $dbh2, 'dbname2', 'tablename');
 
 
 =head1 DESCRIPTION

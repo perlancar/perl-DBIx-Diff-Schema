@@ -5,7 +5,7 @@ use strict;
 use warnings;
 
 use DBI;
-use DBIx::Diff::Struct qw(diff_db_struct);
+use DBIx::Diff::Schema qw(diff_db_schema);
 use File::chdir;
 use File::Temp qw(tempdir);
 use Test::More 0.98;
@@ -44,12 +44,12 @@ connect_db();
 setup_db();
 
 subtest "diff with self" => sub {
-    is_deeply(diff_db_struct($dbh1, $dbh1), {});
-    is_deeply(diff_db_struct($dbh2, $dbh2), {});
+    is_deeply(diff_db_schema($dbh1, $dbh1), {});
+    is_deeply(diff_db_schema($dbh2, $dbh2), {});
 };
 
 subtest "diff" => sub {
-    my $res = diff_db_struct($dbh1, $dbh2);
+    my $res = diff_db_schema($dbh1, $dbh2);
     is_deeply($res, {
         added_tables    => ['main.t3'],
         deleted_tables  => ['main.t1'],
@@ -71,7 +71,7 @@ subtest "diff" => sub {
         },
     }) or diag explain $res;
 
-    $res = diff_db_struct($dbh2, $dbh1);
+    $res = diff_db_schema($dbh2, $dbh1);
     is_deeply($res, {
         added_tables    => ['main.t1'],
         deleted_tables  => ['main.t3'],
