@@ -1,6 +1,6 @@
-Revision history for DBIx-Diff-Struct
+Revision history for DBIx-Diff-Schema
 
-0.04    2015-01-07 (PERLANCAR) (unreleased)
+0.04    2015-01-07 (PERLANCAR)
 
         - Rename dist/module from DBIx-Diff-Struct to DBIx-Diff-Schema ("schema"
           is the more common term in database parlance). Function name is also
