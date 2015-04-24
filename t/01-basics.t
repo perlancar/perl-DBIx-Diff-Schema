@@ -5,9 +5,11 @@ use strict;
 use warnings;
 
 use DBI;
-use DBIx::Diff::Schema qw(diff_db_schema);
+use DBIx::Diff::Schema qw(diff_db_schema diff_table_schema
+                          db_schema_eq table_schema_eq);
 use File::chdir;
 use File::Temp qw(tempdir);
+use Test::Exception;
 use Test::More 0.98;
 
 my $dir = tempdir(CLEANUP => 1);
@@ -43,56 +45,80 @@ sub setup_db {
 connect_db();
 setup_db();
 
-subtest "diff with self" => sub {
-    is_deeply(diff_db_schema($dbh1, $dbh1), {});
-    is_deeply(diff_db_schema($dbh2, $dbh2), {});
-};
+is_deeply(diff_db_schema($dbh1, $dbh1), {});
+ok(db_schema_eq($dbh2, $dbh2));
 
-subtest "diff" => sub {
-    my $res = diff_db_schema($dbh1, $dbh2);
-    is_deeply($res, {
-        added_tables    => ['main.t3'],
-        deleted_tables  => ['main.t1'],
-        modified_tables => {
-            'main.t2' => {
-                added_columns    => ['b'],
-                deleted_columns  => ['a'],
-                modified_columns => {
-                    f1 => {
-                        old_nullable => 0,
-                        new_nullable => 1,
-                    },
-                    i1 => {
-                        old_type => 'INT',
-                        new_type => 'FLOAT',
-                    },
+my $res;
+
+$res = diff_db_schema($dbh1, $dbh2);
+is_deeply($res, {
+    added_tables    => ['main.t3'],
+    deleted_tables  => ['main.t1'],
+    modified_tables => {
+        'main.t2' => {
+            added_columns    => ['b'],
+            deleted_columns  => ['a'],
+            modified_columns => {
+                f1 => {
+                    old_nullable => 0,
+                    new_nullable => 1,
+                },
+                i1 => {
+                    old_type => 'INT',
+                    new_type => 'FLOAT',
                 },
             },
         },
-    }) or diag explain $res;
+    },
+}) or diag explain $res;
 
-    $res = diff_db_schema($dbh2, $dbh1);
-    is_deeply($res, {
-        added_tables    => ['main.t1'],
-        deleted_tables  => ['main.t3'],
-        modified_tables => {
-            'main.t2' => {
-                added_columns    => ['a'],
-                deleted_columns  => ['b'],
-                modified_columns => {
-                    f1 => {
-                        old_nullable => 1,
-                        new_nullable => 0,
-                    },
-                    i1 => {
-                        old_type => 'FLOAT',
-                        new_type => 'INT',
-                    },
+$res = diff_db_schema($dbh2, $dbh1);
+is_deeply($res, {
+    added_tables    => ['main.t1'],
+    deleted_tables  => ['main.t3'],
+    modified_tables => {
+        'main.t2' => {
+            added_columns    => ['a'],
+            deleted_columns  => ['b'],
+            modified_columns => {
+                f1 => {
+                    old_nullable => 1,
+                    new_nullable => 0,
+                },
+                i1 => {
+                    old_type => 'FLOAT',
+                    new_type => 'INT',
                 },
             },
         },
-    }) or diag explain $res;
-};
+    },
+}) or diag explain $res;
+
+ok(!db_schema_eq($dbh1, $dbh2));
+
+dies_ok { diff_table_schema($dbh1, $dbh2, 'x') };
+dies_ok { diff_table_schema($dbh1, $dbh2, 'main.t1', 'x') };
+
+is_deeply(diff_table_schema($dbh1, $dbh2, 'main.t1', 'main.t3'), {});
+ok(table_schema_eq($dbh1, $dbh2, 'main.t1', 'main.t3'));
+
+$res = diff_table_schema($dbh2, $dbh1, 'main.t2');
+is_deeply($res, {
+    added_columns    => ['a'],
+    deleted_columns  => ['b'],
+    modified_columns => {
+        f1 => {
+            old_nullable => 1,
+            new_nullable => 0,
+        },
+        i1 => {
+            old_type => 'FLOAT',
+            new_type => 'INT',
+        },
+    },
+}) or diag explain $res;
+
+ok(!table_schema_eq($dbh1, $dbh2, 'main.t1', 'main.t2'));
 
 DONE_TESTING:
 done_testing();
