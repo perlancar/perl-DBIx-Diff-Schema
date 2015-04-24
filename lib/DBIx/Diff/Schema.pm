@@ -44,7 +44,7 @@ my %diff_db_args = (
 
 my %diff_table_args = (
     %diff_db_args,
-    table => {
+    table1 => {
         schema => 'str*',
         summary => 'Table name',
         req => 1,

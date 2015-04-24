@@ -1,5 +1,17 @@
 Revision history for DBIx-Diff-Schema
 
+0.05    2015-04-24 (PERLANCAR)
+
+        - Add functions: db_schema_eq(), table_schema_eq().
+
+        - diff_table_schema(): Check table existence first.
+
+        - diff_table_schema(): Allow specifying second database's table name
+          should it differ from the first database's table name.
+
+        - Replace Log::Any with Log::Any::IfLOG.
+
+
 0.04    2015-01-07 (PERLANCAR)
 
         - Rename dist/module from DBIx-Diff-Struct to DBIx-Diff-Schema ("schema"
