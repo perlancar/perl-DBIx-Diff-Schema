@@ -1,5 +1,10 @@
 Revision history for DBIx-Diff-Schema
 
+0.06    2015-05-20 (PERLANCAR)
+
+	- Skip index when listing tables.
+
+
 0.05    2015-04-24 (PERLANCAR)
 
         - Add functions: db_schema_eq(), table_schema_eq().
