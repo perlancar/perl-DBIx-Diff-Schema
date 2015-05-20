@@ -78,6 +78,7 @@ sub _list_tables {
     my $sth = $dbh->table_info(undef, undef, undef, undef);
     while (my $row = $sth->fetchrow_hashref) {
         next if $row->{TABLE_TYPE} eq 'VIEW';
+        next if $row->{TABLE_TYPE} eq 'INDEX';
         next if $row->{TABLE_SCHEM} =~ /^(information_schema)$/;
 
         if ($driver eq 'Pg') {
