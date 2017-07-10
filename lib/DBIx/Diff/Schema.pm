@@ -7,7 +7,7 @@ use 5.010001;
 use strict;
 use warnings;
 use experimental 'smartmatch';
-use Log::Any::IfLOG '$log';
+use Log::ger;
 
 use List::Util qw(first);
 
@@ -146,8 +146,8 @@ sub _diff_table_schema {
     my @columns1 = _list_columns($dbh1, $table1);
     my @columns2 = _list_columns($dbh2, $table2);
 
-    $log->tracef("columns1: %s ...", \@columns1);
-    $log->tracef("columns2: %s ...", \@columns2);
+    log_trace("columns1: %s ...", \@columns1);
+    log_trace("columns2: %s ...", \@columns2);
 
     my (@added, @deleted, %modified);
     for my $c1 (@columns1) {
@@ -288,8 +288,8 @@ sub diff_db_schema {
     my @tables1 = _list_tables($dbh1);
     my @tables2 = _list_tables($dbh2);
 
-    $log->tracef("tables1: %s ...", \@tables1);
-    $log->tracef("tables2: %s ...", \@tables2);
+    log_trace("tables1: %s ...", \@tables1);
+    log_trace("tables2: %s ...", \@tables2);
 
     my (@added, @deleted, %modified);
     for (@tables1) {
