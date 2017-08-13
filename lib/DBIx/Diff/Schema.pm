@@ -366,4 +366,7 @@ Currently only tested on Postgres and SQLite.
 
 L<DBIx::Compare> to compare database contents.
 
+L<diffdb> from L<App::diffdb> which can compare two database (schema as well as
+content) and display the result as the familiar colored unified-style diff.
+
 =cut
