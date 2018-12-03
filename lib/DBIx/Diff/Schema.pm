@@ -150,6 +150,10 @@ sub _diff_column_schema {
                 $res->{new_digits} = $c2->{DECIMAL_DIGITS};
             }
         }
+        if (($c1->{mysql_is_auto_increment} // 0) != ($c2->{mysql_is_auto_increment} // 0)) {
+            $res->{old_auto_increment} = $c1->{mysql_is_auto_increment} // 0;
+            $res->{new_auto_increment} = $c2->{mysql_is_auto_increment} // 0;
+        }
     }
     $res;
 }
