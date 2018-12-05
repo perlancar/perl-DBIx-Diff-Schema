@@ -13,6 +13,9 @@ use List::Util qw(first);
 use Exporter;
 our @ISA = qw(Exporter);
 our @EXPORT_OK = qw(
+                       list_columns
+                       list_tables
+                       check_table_exists
                        diff_db_schema
                        diff_table_schema
                        db_schema_eq
@@ -25,6 +28,24 @@ $SPEC{':package'} = {
     v => 1.1,
     summary => 'Compare schema of two DBI databases',
 };
+
+my %arg0_dbh = (
+    dbh => {
+        schema => ['obj*'],
+        summary => 'DBI database handle',
+        req => 1,
+        pos => 0,
+    },
+);
+
+my %arg1_table = (
+    table => {
+        schema => ['str*'],
+        summary => 'Table name',
+        req => 1,
+        pos => 1,
+    },
+);
 
 my %diff_db_args = (
     dbh1 => {
@@ -56,7 +77,17 @@ my %diff_table_args = (
     },
 );
 
-sub _check_table_exists {
+$SPEC{check_table_exists} = {
+    v => 1.1,
+    summary => 'Check whether a table exists',
+    args => {
+        %arg0_dbh,
+        %arg1_table,
+    },
+    args_as => "array",
+    result_naked => 1,
+};
+sub check_table_exists {
     my ($dbh, $name) = @_;
     my $sth;
     if ($name =~ /(.+)\.(.+)/) {
@@ -68,7 +99,16 @@ sub _check_table_exists {
     $sth->fetchrow_hashref ? 1:0;
 }
 
-sub _list_tables {
+$SPEC{list_tables} = {
+    v => 1.1,
+    summary => 'List table names in a database',
+    args => {
+        %arg0_dbh,
+    },
+    args_as => "array",
+    result_naked => 1,
+};
+sub list_tables {
     my ($dbh) = @_;
 
     my $driver = $dbh->{Driver}{Name};
@@ -106,7 +146,17 @@ sub _list_tables {
     sort @res;
 }
 
-sub _list_columns {
+$SPEC{list_columns} = {
+    v => 1.1,
+    summary => 'List columns of a table',
+    args => {
+        %arg0_dbh,
+        %arg1_table,
+    },
+    args_as => "array",
+    result_naked => 1,
+};
+sub list_columns {
     my ($dbh, $table) = @_;
 
     my @res;
@@ -161,8 +211,8 @@ sub _diff_column_schema {
 sub _diff_table_schema {
     my ($dbh1, $dbh2, $table1, $table2) = @_;
 
-    my @columns1 = _list_columns($dbh1, $table1);
-    my @columns2 = _list_columns($dbh2, $table2);
+    my @columns1 = list_columns($dbh1, $table1);
+    my @columns2 = list_columns($dbh2, $table2);
 
     log_trace("columns1: %s ...", \@columns1);
     log_trace("columns2: %s ...", \@columns2);
@@ -231,9 +281,9 @@ sub diff_table_schema {
     #$log->tracef("Comparing table %s vs %s ...", $table1, $table2);
 
     die "Table $table1 in first database does not exist"
-        unless _check_table_exists($dbh1, $table1);
+        unless check_table_exists($dbh1, $table1);
     die "Table $table2 in second database does not exist"
-        unless _check_table_exists($dbh2, $table2);
+        unless check_table_exists($dbh2, $table2);
     _diff_table_schema($dbh1, $dbh2, $table1, $table2);
 }
 
@@ -303,8 +353,8 @@ sub diff_db_schema {
     my $dbh1 = shift; # VALIDATE_ARG
     my $dbh2 = shift; # VALIDATE_ARG
 
-    my @tables1 = _list_tables($dbh1);
-    my @tables2 = _list_tables($dbh2);
+    my @tables1 = list_tables($dbh1);
+    my @tables2 = list_tables($dbh2);
 
     log_trace("tables1: %s ...", \@tables1);
     log_trace("tables2: %s ...", \@tables2);
