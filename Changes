@@ -1,3 +1,9 @@
+0.094   2020-04-20  Released-By: PERLANCAR; Urgency: medium
+
+	- Add function: list_table_indexes (currently only supports
+	  SQLite).
+
+
 0.093   2018-12-05  Released-By: PERLANCAR
 
 	- Make these functions public: list_columns, list_tables,
