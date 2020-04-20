@@ -1,6 +1,8 @@
 package DBIx::Diff::Schema;
 
+# AUTHORITY
 # DATE
+# DIST
 # VERSION
 
 use 5.010001;
@@ -15,6 +17,7 @@ our @ISA = qw(Exporter);
 our @EXPORT_OK = qw(
                        list_columns
                        list_tables
+                       list_table_indexes
                        check_table_exists
                        diff_db_schema
                        diff_table_schema
@@ -117,8 +120,8 @@ sub list_tables {
     my $sth = $dbh->table_info(undef, undef, undef, undef);
     while (my $row = $sth->fetchrow_hashref) {
         my $name  = $row->{TABLE_NAME};
-        my $type  = $row->{TABLE_TYPE};
         my $schem = $row->{TABLE_SCHEM};
+        my $type  = $row->{TABLE_TYPE};
 
         if ($driver eq 'mysql') {
             # mysql driver returns database name as schema, so that's useless
@@ -142,6 +145,105 @@ sub list_tables {
             length($schem) ? "." : "",
             $name,
         );
+    }
+    sort @res;
+}
+
+$SPEC{list_table_indexes} = {
+    v => 1.1,
+    summary => 'List indexes for a table in a database',
+    description => <<'_',
+
+General notes: information is retrieved from DBI's table_info().
+
+SQLite notes: autoindex for primary key is also listed as the first index, if it
+exists. This information is retrieved using "SELECT * FROM sqlite_master".
+Autoindex is not listed using table_info().
+
+_
+    args => {
+        %arg0_dbh,
+        %arg1_table,
+    },
+    args_as => "array",
+    result_naked => 1,
+};
+sub list_table_indexes {
+    my ($dbh, $wanted_table) = @_;
+
+    my $driver = $dbh->{Driver}{Name};
+
+    my @res;
+
+    if ($driver eq 'SQLite') {
+        my @wanted_tables;
+        if (defined $wanted_table) {
+            @wanted_tables = ($wanted_table);
+        } else {
+            @wanted_tables = list_tables($dbh);
+        }
+        for (@wanted_tables) { $_ = $1 if /.+\.(.+)/ }
+        my $sth = $dbh->prepare("SELECT * FROM sqlite_master");
+        $sth->execute;
+        while (my $row = $sth->fetchrow_hashref) {
+            next unless $row->{type} eq 'index';
+            next unless grep { $_ eq $row->{tbl_name} } @wanted_tables;
+            next unless $row->{name} =~ /\Asqlite_autoindex_.+_(\d+)\z/;
+            my $col_num = $1;
+            my @cols = list_columns($dbh, $row->{tbl_name});
+            push @res, {
+                name      => "(autoindex, primary key)",
+                table     => $row->{tbl_name},
+                columns   => [$cols[$col_num-1]{COLUMN_NAME}],
+                is_unique => 1,
+                is_pk     => 1,
+            };
+        }
+    }
+
+    my $sth = $dbh->table_info(undef, undef, undef, undef);
+    while (my $row = $sth->fetchrow_hashref) {
+        next unless $row->{TABLE_TYPE} eq 'INDEX';
+
+        my $table = $row->{TABLE_NAME};
+        my $schem = $row->{TABLE_SCHEM};
+
+        # match table name
+        if (defined $wanted_table) {
+            if ($driver eq 'mysql') {
+                # mysql driver returns database name as schema, so that's useless
+                $schem = '';
+                next unless $table eq $wanted_table;
+            } else {
+                if ($wanted_table =~ /(.+)\.(.+)/) {
+                    next unless $schem eq $1 && $table eq $2;
+                } else {
+                    next unless $table eq $wanted_table;
+                }
+            }
+        }
+
+        # parse index information
+        my $index_info = {};
+        if ($driver eq 'SQLite') {
+            next unless $row->{sqlite_sql};
+            #use DD; dd $row;
+            $index_info->{sqlite_sql} = $row->{sqlite_sql};
+            $row->{sqlite_sql} =~ s/\A\s*CREATE\s+(UNIQUE\s+)?INDEX\s+//is
+                or die "Can't extract CREATE INDEX statement in sqlite_sql: $row->{sqlite_sql}";
+            $index_info->{is_unique} = $1 ? 1:0;
+            $row->{sqlite_sql} =~ s/\A(\S+)\s+//s
+                or die "Can't extract index name from sqlite_sql: $row->{sqlite_sql}";
+            $index_info->{name} = $1;
+            $row->{sqlite_sql} =~ s/\AON\s*(\S+)\s*\(\s*(.+)\s*\)//s
+                or die "Can't extract indexed table+columns from sqlite_sql: $row->{sqlite_sql}";
+            $index_info->{table} = $table // $1;
+            $index_info->{columns} = [split /\s*,\s*/, $2];
+        } else {
+            die "Driver $driver is not yet supported";
+        }
+
+        push @res, $index_info;
     }
     sort @res;
 }
