@@ -155,11 +155,9 @@ $SPEC{list_indexes} = {
     summary => 'List indexes for a table in a database',
     description => <<'_',
 
-General notes: information is retrieved from DBI's table_info().
-
-SQLite notes: autoindex for primary key is also listed as the first index, if it
-exists. This information is retrieved using "SELECT * FROM sqlite_master".
-Autoindex is not listed using table_info().
+SQLite notes: information is retrieved from DBI's table_info(). Autoindex for
+primary key is not listed using table_info(), but this function adds it by
+looking at `sqlite_master` table.
 
 _
     args => {
