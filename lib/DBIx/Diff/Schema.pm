@@ -159,6 +159,11 @@ SQLite notes: information is retrieved from DBI's table_info(). Autoindex for
 primary key is not listed using table_info(), but this function adds it by
 looking at `sqlite_master` table.
 
+MySQL notes: information is retrieved from statistics_info(). Note that a
+multi-column index is reported as separate rows by statistics_info(), one for
+each indexed column. But this function merges them and returns the list of
+columns in `columns`.
+
 _
     args => {
         %arg0_dbh,
