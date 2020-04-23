@@ -274,8 +274,11 @@ sub list_indexes {
                 push @res, $hashes[0];
             } else {
                 my %merged_hash;
-                $merged_hash{columns} = [map { $_->{COLUMN_NAME} } @hashes];
-                for my $hash (@hashes) { for (keys %$hash) { $merged_hash{$_} = $hash->{$_} } }
+                $merged_hash{columns} = [];
+                for my $hash (@hashes) {
+                    $merged_hash{columns}[ $hash->{ORDINAL_POSITION}-1 ] = $hash->{COLUMN_NAME};
+                    for (keys %$hash) { $merged_hash{$_} = $hash->{$_} }
+                }
                 delete $merged_hash{ORDINAL_POSITION};
                 push @res, \%merged_hash;
             }
