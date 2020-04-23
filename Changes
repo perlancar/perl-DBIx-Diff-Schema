@@ -1,3 +1,8 @@
+0.096   2020-04-23  Released-By: PERLANCAR; Urgency: medium
+
+	- [bugfix] handle statistics_info() returning the same index twice.
+
+
 0.095   2020-04-23  Released-By: PERLANCAR; Urgency: medium
 
 	- [incompatible change] Rename list_table_indexes() to list_indexes() to
